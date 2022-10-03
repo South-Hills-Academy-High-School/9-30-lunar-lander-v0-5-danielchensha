@@ -2,6 +2,38 @@ namespace SpriteKind {
     export const map = SpriteKind.create()
     export const rocketengine = SpriteKind.create()
 }
+scene.onOverlapTile(SpriteKind.Player, sprites.builtin.forestTiles0, function (sprite, location) {
+    if (Math.abs(apple.vx) > 20 || apple.vx > 50) {
+        boom = sprites.create(img`
+            . . . . 2 2 2 2 2 2 2 2 . . . . 
+            . . . 2 4 4 4 5 5 4 4 4 2 2 2 . 
+            . 2 2 5 5 d 4 5 5 5 4 4 4 4 2 . 
+            . 2 4 5 5 5 5 d 5 5 5 4 5 4 2 2 
+            . 2 4 d d 5 5 5 5 5 5 d 4 4 4 2 
+            2 4 5 5 d 5 5 5 d d d 5 5 5 4 4 
+            2 4 5 5 4 4 4 d 5 5 d 5 5 5 4 4 
+            4 4 4 4 . . 2 4 5 5 . . 4 4 4 4 
+            . . b b b b 2 4 4 2 b b b b . . 
+            . b d d d d 2 4 4 2 d d d d b . 
+            b d d b b b 2 4 4 2 b b b d d b 
+            b d d b b b b b b b b b b d d b 
+            b b d 1 1 3 1 1 d 1 d 1 1 d b b 
+            . . b b d d 1 1 3 d d 1 b b . . 
+            . . 2 2 4 4 4 4 4 4 4 4 2 2 . . 
+            . . . 2 2 4 4 4 4 4 2 2 2 . . . 
+            `, SpriteKind.Player)
+        boom.setPosition(apple.x, apple.x)
+        scene.cameraFollowSprite(boom)
+        music.bigCrash.playUntilDone()
+        gameOverFlag += 1
+    } else {
+        if (landingFlag == 0) {
+            fuel += 100
+            landingFlag = 1
+        }
+    }
+    apple.setVelocity(0, -1)
+})
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     apple.ay = 25 * Math.sin(angle)
     apple.ax = 25 * Math.cos(angle)
@@ -10,39 +42,6 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
 })
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     angle += 15 * (3.14 / 180)
-})
-scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.darkGroundNorthWest1, function (sprite, location) {
-    if (Math.abs(apple.vx) > 20 || apple.vx > 50) {
-        boom = sprites.create(img`
-            . 3 . . . . . . . . . . . 4 . . 
-            . 3 3 . . . . . . . . . 4 4 . . 
-            . 3 d 3 . . 4 4 . . 4 4 d 4 . . 
-            . . 3 5 3 4 5 5 4 4 d d 4 4 . . 
-            . . 3 d 5 d 1 1 d 5 5 d 4 4 . . 
-            . . 4 5 5 1 1 1 1 5 1 1 5 4 . . 
-            . 4 5 5 5 5 1 1 5 1 1 1 d 4 4 . 
-            . 4 d 5 1 1 5 5 5 1 1 1 5 5 4 . 
-            . 4 4 5 1 1 5 5 5 5 5 d 5 5 4 . 
-            . . 4 3 d 5 5 5 d 5 5 d d d 4 . 
-            . 4 5 5 d 5 5 5 d d d 5 5 4 . . 
-            . 4 5 5 d 3 5 d d 3 d 5 5 4 . . 
-            . 4 4 d d 4 d d d 4 3 d d 4 . . 
-            . . 4 5 4 4 4 4 4 4 4 4 4 . . . 
-            . 4 5 4 . . 4 4 4 . . . 4 4 . . 
-            . 4 4 . . . . . . . . . . 4 4 . 
-            `, SpriteKind.Player)
-        boom.setPosition(scene.cameraProperty(CameraProperty.X), scene.cameraProperty(CameraProperty.X))
-        scene.cameraFollowSprite(boom)
-        music.bigCrash.playUntilDone()
-        pause(1000)
-        game.over(false)
-    } else {
-        if (landingFlag == 0) {
-            fuel += 100
-            landingFlag = 1
-        }
-    }
-    apple.setVelocity(0, -1)
 })
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     angle += -15 * (3.14 / 180)
@@ -58,6 +57,8 @@ let angle = 0
 let fireball: Sprite = null
 let landingFlag = 0
 let rocketflag = 0
+tiles.setCurrentTilemap(tilemap`level3`)
+let gameOverFlag = 0
 let fuel = 1000
 let fuelSprite = textsprite.create(convertToText(fuel))
 rocketflag = 0
@@ -82,7 +83,6 @@ fireball = sprites.create(img`
     `, SpriteKind.Projectile)
 fireball.setFlag(SpriteFlag.Invisible, true)
 angle = 0
-tiles.setCurrentTilemap(tilemap`level2`)
 effects.clouds.startScreenEffect()
 apple = sprites.create(img`
     . . . . . . . e 9 9 . . . . . . 
@@ -127,5 +127,11 @@ game.onUpdate(function () {
     }
     if (apple.y < 150) {
         landingFlag = 0
+    }
+    if (gameOverFlag == 2) {
+        game.over(false)
+    }
+    if (gameOverFlag == 1) {
+        gameOverFlag += 1
     }
 })
